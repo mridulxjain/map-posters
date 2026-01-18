@@ -45,7 +45,7 @@ const THEMES = [
     value: "neon_cyberpunk",
     label: "Neon Cyberpunk",
     desc: "Dark background with electric pink/cyan - bold night city vibes",
-  }
+  },
 ];
 
 const DISTANCES = [
@@ -72,9 +72,11 @@ export default function PosterForm({ setImageUrl, setLoading }) {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/generate?city=${encodeURIComponent(
+        `https://map-posters.onrender.com/generate?city=${encodeURIComponent(
           city
-        )}&country=${encodeURIComponent(country)}&theme=${theme}&dist=${distance}`
+        )}&country=${encodeURIComponent(
+          country
+        )}&theme=${theme}&dist=${distance}`
       );
 
       const data = await res.json();
@@ -89,10 +91,7 @@ export default function PosterForm({ setImageUrl, setLoading }) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Inputs */}
       <div className="space-y-4">
-
-        {/* City */}
         <div>
           <label className="text-xs text-gray-400">City</label>
           <input
@@ -103,7 +102,6 @@ export default function PosterForm({ setImageUrl, setLoading }) {
           />
         </div>
 
-        {/* Country */}
         <div>
           <label className="text-xs text-gray-400">Country</label>
           <input
@@ -114,7 +112,6 @@ export default function PosterForm({ setImageUrl, setLoading }) {
           />
         </div>
 
-        {/* Distance */}
         <div>
           <label className="text-xs text-gray-400">Map Radius</label>
           <select
@@ -130,7 +127,6 @@ export default function PosterForm({ setImageUrl, setLoading }) {
           </select>
         </div>
 
-        {/* Theme */}
         <div>
           <label className="text-xs text-gray-400">Theme</label>
           <select
@@ -145,7 +141,6 @@ export default function PosterForm({ setImageUrl, setLoading }) {
             ))}
           </select>
 
-          {/* Theme description */}
           {activeTheme && (
             <p className="mt-1 text-xs text-gray-500">
               {activeTheme.desc}
@@ -154,7 +149,6 @@ export default function PosterForm({ setImageUrl, setLoading }) {
         </div>
       </div>
 
-      {/* Button */}
       <div className="mt-auto pt-5">
         <button
           onClick={handleGenerate}
