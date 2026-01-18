@@ -1,32 +1,48 @@
-from fastapi import FastAPI, Query
-from fastapi import BackgroundTasks
-from cleanup import cleanup_old_posters
+import os
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
 from poster_generator import generate_map_poster
-import os
+from cleanup import cleanup_old_posters
+
 
 app = FastAPI()
+
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://beautymap.vercel.app",
-        "http://localhost:3000"
+        "http://localhost:3000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
+
+BASE_URL = os.getenv(
+    "BASE_URL",
+    "https://map-posters.onrender.com"
+)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 POSTERS_DIR = os.path.join(BASE_DIR, "posters")
 
 os.makedirs(POSTERS_DIR, exist_ok=True)
 
+
+
 app.mount("/posters", StaticFiles(directory=POSTERS_DIR), name="posters")
+
+
+
+@app.options("/{path:path}")
+def preflight_handler(path: str):
+    return {}
+
+
 
 @app.get("/generate")
 def generate(
@@ -40,8 +56,14 @@ def generate(
 
     filename = os.path.basename(image_path)
 
-    background_tasks.add_task(cleanup_old_posters, POSTERS_DIR)
+    if background_tasks is not None:
+        background_tasks.add_task(cleanup_old_posters, POSTERS_DIR)
 
     return {
         "image_url": f"{BASE_URL}/posters/{filename}"
     }
+
+
+@app.get("/")
+def root():
+    return {"status": "ok"}
