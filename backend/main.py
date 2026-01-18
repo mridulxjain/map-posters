@@ -10,10 +10,15 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://beautymap.vercel.app",
+        "http://localhost:3000"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
