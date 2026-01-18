@@ -1,0 +1,14 @@
+{
+  "name": "Noir",
+  "bg": "#0b0b0b",
+  "text": "#ffffff",
+  "gradient_color": "#0b0b0b",
+  "water": "#1a1a1a",
+  "parks": "#111111",
+  "road_motorway": "#ffffff",
+  "road_primary": "#cccccc",
+  "road_secondary": "#999999",
+  "road_tertiary": "#666666",
+  "road_residential": "#444444",
+  "road_default": "#333333"
+}

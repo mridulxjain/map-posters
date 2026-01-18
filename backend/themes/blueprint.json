@@ -1,0 +1,14 @@
+{
+  "name": "Blueprint",
+  "bg": "#0a1a2f",
+  "text": "#e6f1ff",
+  "gradient_color": "#0a1a2f",
+  "water": "#133b5c",
+  "parks": "#0f2a44",
+  "road_motorway": "#e6f1ff",
+  "road_primary": "#b3d4ff",
+  "road_secondary": "#7fb3ff",
+  "road_tertiary": "#4d94ff",
+  "road_residential": "#336699",
+  "road_default": "#2a4f7a"
+}
