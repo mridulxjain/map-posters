@@ -1,5 +1,4 @@
 import os
-import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +13,6 @@ from queue_manager import (
 )
 
 app = FastAPI()
-
 
 
 app.add_middleware(
@@ -38,16 +36,15 @@ os.makedirs(POSTERS_DIR, exist_ok=True)
 app.mount("/posters", StaticFiles(directory=POSTERS_DIR), name="posters")
 
 
+
 @app.get("/")
 def health():
     return {"status": "ok"}
 
 
-
 @app.get("/generate")
 def generate(city: str, country: str, theme: str = "feature_based", dist: int = 6000):
     job_id, position = add_job()
-
     return {
         "job_id": job_id,
         "queue_position": position
@@ -61,7 +58,6 @@ def queue_status(job_id: str):
     }
 
 
-
 @app.get("/process")
 def process(
     job_id: str,
@@ -70,8 +66,9 @@ def process(
     theme: str = "feature_based",
     dist: int = 6000
 ):
-    active_job = start_job()
+    dist = min(dist, 6000)
 
+    active_job = start_job()
 
     if active_job != job_id:
         return {

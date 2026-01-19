@@ -26,10 +26,15 @@ def get_position(job_id):
 def start_job():
     global current_job
     with lock:
-        if current_job is None and queue:
+
+        if current_job is not None:
+            return current_job
+
+        if queue:
             current_job = queue.pop(0)
             return current_job
-    return None
+
+        return None
 
 
 def finish_job():

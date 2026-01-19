@@ -25,7 +25,7 @@ export default function PosterForm({
   setLoading,
   setQueuePosition,
   status,
-  setStatus
+  setStatus,
 }) {
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
@@ -35,13 +35,14 @@ export default function PosterForm({
 
   const activeTheme = THEMES.find(t => t.value === theme);
 
-  // STEP 1: enqueue
+  // ---------------- START GENERATION ----------------
   async function handleGenerate() {
     if (!city || !country || status !== "idle") return;
 
     setStatus("queued");
     setLoading(true);
     setImageUrl(null);
+    setQueuePosition(null);
 
     const res = await fetch(
       `${API}/generate?city=${encodeURIComponent(city)}&country=${encodeURIComponent(
@@ -54,7 +55,7 @@ export default function PosterForm({
     setQueuePosition(data.queue_position);
   }
 
-  // STEP 2: poll queue
+  // ---------------- POLL QUEUE ----------------
   useEffect(() => {
     if (!jobId || status !== "queued") return;
 
@@ -73,7 +74,7 @@ export default function PosterForm({
     return () => clearInterval(interval);
   }, [jobId, status]);
 
-  // STEP 3: process job
+  // ---------------- PROCESS JOB ----------------
   useEffect(() => {
     if (status !== "processing" || !jobId) return;
 
@@ -98,6 +99,18 @@ export default function PosterForm({
     processJob();
   }, [status, jobId]);
 
+  // ---------------- BUTTON TEXT ----------------
+  const buttonText =
+    status === "idle"
+      ? "Generate Poster"
+      : status === "queued"
+      ? "In Queue..."
+      : status === "processing"
+      ? "Generating..."
+      : "Generate Again";
+
+  const disabled = status !== "idle";
+
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-4">
@@ -107,6 +120,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={city}
             onChange={e => setCity(e.target.value)}
+            disabled={disabled}
           />
         </div>
 
@@ -116,6 +130,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={country}
             onChange={e => setCountry(e.target.value)}
+            disabled={disabled}
           />
         </div>
 
@@ -125,6 +140,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={distance}
             onChange={e => setDistance(Number(e.target.value))}
+            disabled={disabled}
           >
             {DISTANCES.map(d => (
               <option key={d.value} value={d.value}>
@@ -140,6 +156,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={theme}
             onChange={e => setTheme(e.target.value)}
+            disabled={disabled}
           >
             {THEMES.map(t => (
               <option key={t.value} value={t.value}>
@@ -149,7 +166,9 @@ export default function PosterForm({
           </select>
 
           {activeTheme && (
-            <p className="mt-1 text-xs text-gray-500">{activeTheme.desc}</p>
+            <p className="mt-1 text-xs text-gray-500">
+              {activeTheme.desc}
+            </p>
           )}
         </div>
       </div>
@@ -157,10 +176,15 @@ export default function PosterForm({
       <div className="mt-auto pt-5">
         <button
           onClick={handleGenerate}
-          disabled={status !== "idle"}
-          className="w-full py-2.5 rounded-md text-sm bg-indigo-500/10 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20"
+          disabled={disabled}
+          className={`w-full py-2.5 rounded-md text-sm font-medium transition
+            ${
+              disabled
+                ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                : "bg-indigo-500/10 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20"
+            }`}
         >
-          Generate Poster
+          {buttonText}
         </button>
       </div>
     </div>
