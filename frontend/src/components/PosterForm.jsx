@@ -24,6 +24,7 @@ export default function PosterForm({
   setImageUrl,
   setLoading,
   setQueuePosition,
+  status,
   setStatus
 }) {
   const [city, setCity] = useState("");
@@ -34,8 +35,9 @@ export default function PosterForm({
 
   const activeTheme = THEMES.find(t => t.value === theme);
 
+  // STEP 1: enqueue
   async function handleGenerate() {
-    if (!city || !country) return;
+    if (!city || !country || status !== "idle") return;
 
     setStatus("queued");
     setLoading(true);
@@ -52,9 +54,9 @@ export default function PosterForm({
     setQueuePosition(data.queue_position);
   }
 
-  /* Poll queue position */
+  // STEP 2: poll queue
   useEffect(() => {
-    if (!jobId) return;
+    if (!jobId || status !== "queued") return;
 
     const interval = setInterval(async () => {
       const res = await fetch(`${API}/queue-status?job_id=${jobId}`);
@@ -69,25 +71,19 @@ export default function PosterForm({
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [jobId]);
+  }, [jobId, status]);
 
-  /* Process job */
+  // STEP 3: process job
   useEffect(() => {
-    if (jobId && distance && theme && city && country) {
-      if (setStatus && setStatus.name !== "processing") return;
-    }
-  }, [jobId]);
-
-  useEffect(() => {
-    if (!jobId) return;
+    if (status !== "processing" || !jobId) return;
 
     async function processJob() {
-      if (setStatus !== "processing") return;
-
       const res = await fetch(
         `${API}/process?job_id=${jobId}&city=${encodeURIComponent(
           city
-        )}&country=${encodeURIComponent(country)}&theme=${theme}&dist=${distance}`
+        )}&country=${encodeURIComponent(
+          country
+        )}&theme=${theme}&dist=${distance}`
       );
 
       const data = await res.json();
@@ -99,10 +95,8 @@ export default function PosterForm({
       }
     }
 
-    if (setStatus === "processing") {
-      processJob();
-    }
-  }, [setStatus]);
+    processJob();
+  }, [status, jobId]);
 
   return (
     <div className="flex flex-col h-full">
@@ -111,7 +105,6 @@ export default function PosterForm({
           <label className="text-xs text-gray-400">City</label>
           <input
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
-            placeholder="Paris"
             value={city}
             onChange={e => setCity(e.target.value)}
           />
@@ -121,7 +114,6 @@ export default function PosterForm({
           <label className="text-xs text-gray-400">Country</label>
           <input
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
-            placeholder="France"
             value={country}
             onChange={e => setCountry(e.target.value)}
           />
@@ -165,6 +157,7 @@ export default function PosterForm({
       <div className="mt-auto pt-5">
         <button
           onClick={handleGenerate}
+          disabled={status !== "idle"}
           className="w-full py-2.5 rounded-md text-sm bg-indigo-500/10 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20"
         >
           Generate Poster
