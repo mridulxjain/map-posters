@@ -1,25 +1,19 @@
 import os
 import time
 
-MAX_FILE_AGE_SECONDS = 30 * 60 
+MAX_AGE = 15 * 60  
 
 
-def cleanup_old_posters(posters_dir: str):
+def cleanup_old_posters(posters_dir):
     if not os.path.exists(posters_dir):
         return
 
     now = time.time()
-
-    for filename in os.listdir(posters_dir):
-        path = os.path.join(posters_dir, filename)
-
-        if not os.path.isfile(path):
-            continue
-
-        age = now - os.path.getmtime(path)
-
-        if age > MAX_FILE_AGE_SECONDS:
-            try:
-                os.remove(path)
-            except Exception:
-                pass
+    for f in os.listdir(posters_dir):
+        path = os.path.join(posters_dir, f)
+        if os.path.isfile(path):
+            if now - os.path.getmtime(path) > MAX_AGE:
+                try:
+                    os.remove(path)
+                except:
+                    pass

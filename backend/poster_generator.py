@@ -12,18 +12,15 @@ from geopy.geocoders import Nominatim
 from matplotlib.font_manager import FontProperties
 
 
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 THEMES_DIR = os.path.join(BASE_DIR, "themes")
 POSTERS_DIR = os.path.join(BASE_DIR, "posters")
 
 os.makedirs(POSTERS_DIR, exist_ok=True)
 
-THEME = None
 
 
-
-def load_theme(theme_name):
+def load_theme(theme_name: str):
     path = os.path.join(THEMES_DIR, f"{theme_name}.json")
     if not os.path.exists(path):
         raise ValueError("Theme not found")
@@ -32,14 +29,16 @@ def load_theme(theme_name):
         return json.load(f)
 
 
-
-def generate_output_filename(city, theme):
+def generate_output_filename(city: str, theme: str):
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     city_slug = city.lower().replace(" ", "_")
-    return os.path.join(POSTERS_DIR, f"{city_slug}_{theme}_{ts}.png")
+    return os.path.join(
+        POSTERS_DIR,
+        f"{city_slug}_{theme}_{ts}.png"
+    )
 
 
-def get_coordinates(city, country):
+def get_coordinates(city: str, country: str):
     geolocator = Nominatim(user_agent="maptoposters/1.0")
     time.sleep(0.5)
 
@@ -50,25 +49,18 @@ def get_coordinates(city, country):
     return location.latitude, location.longitude
 
 
-def get_edge_colors(G):
+def build_edge_styles(G, theme):
     colors = []
+    widths = []
+
     for _, _, data in G.edges(data=True):
         hw = data.get("highway", "unclassified")
         if isinstance(hw, list):
             hw = hw[0]
 
         colors.append(
-            THEME.get(f"road_{hw}", THEME["road_default"])
+            theme.get(f"road_{hw}", theme["road_default"])
         )
-    return colors
-
-
-def get_edge_widths(G):
-    widths = []
-    for _, _, data in G.edges(data=True):
-        hw = data.get("highway", "")
-        if isinstance(hw, list):
-            hw = hw[0]
 
         if hw == "motorway":
             widths.append(1.1)
@@ -79,24 +71,28 @@ def get_edge_widths(G):
         else:
             widths.append(0.45)
 
-    return widths
+    return colors, widths
 
 
 
-def generate_map_poster(city, country, theme_name="feature_based", dist=6000):
-    global THEME
+def generate_map_poster(
+    city: str,
+    country: str,
+    theme_name: str = "feature_based",
+    dist: int = 6000
+):
 
-    dist = min(dist, 5000)
+    dist = max(4000, min(dist, 6000))
 
     try:
-        THEME = load_theme(theme_name)
+        theme = load_theme(theme_name)
     except Exception:
-        THEME = load_theme("feature_based")
+        theme = load_theme("feature_based")
 
     lat, lon = get_coordinates(city, country)
     output_path = generate_output_filename(city, theme_name)
 
-    # 🚨 Biggest memory saver
+    # 🚨 MEMORY-SAFE GRAPH
     G = ox.graph_from_point(
         (lat, lon),
         dist=dist,
@@ -104,38 +100,45 @@ def generate_map_poster(city, country, theme_name="feature_based", dist=6000):
         simplify=True
     )
 
-    fig, ax = plt.subplots(figsize=(10, 14), facecolor=THEME["bg"])
+    edge_colors, edge_widths = build_edge_styles(G, theme)
+
+    fig, ax = plt.subplots(
+        figsize=(10, 14),
+        facecolor=theme["bg"]
+    )
     ax.axis("off")
 
     ox.plot_graph(
         G,
         ax=ax,
         node_size=0,
-        edge_color=get_edge_colors(G),
-        edge_linewidth=get_edge_widths(G),
+        edge_color=edge_colors,
+        edge_linewidth=edge_widths,
         show=False,
         close=False,
-        bgcolor=THEME["bg"],
+        bgcolor=theme["bg"],
     )
 
     font_city = FontProperties(weight="bold", size=44)
     font_country = FontProperties(size=22)
 
     ax.text(
-        0.5, 0.12,
+        0.5,
+        0.12,
         "  ".join(city.upper()),
         transform=ax.transAxes,
         ha="center",
-        color=THEME["text"],
+        color=theme["text"],
         fontproperties=font_city,
     )
 
     ax.text(
-        0.5, 0.08,
+        0.5,
+        0.08,
         country.upper(),
         transform=ax.transAxes,
         ha="center",
-        color=THEME["text"],
+        color=theme["text"],
         fontproperties=font_country,
     )
 
@@ -143,11 +146,11 @@ def generate_map_poster(city, country, theme_name="feature_based", dist=6000):
         output_path,
         dpi=140,
         bbox_inches="tight",
-        facecolor=THEME["bg"],
+        facecolor=theme["bg"],
     )
-    plt.close()
 
-
+    fig.clf()
+    plt.close(fig)
     del G
     gc.collect()
 
