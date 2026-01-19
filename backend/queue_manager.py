@@ -10,8 +10,7 @@ def add_job():
     job_id = str(uuid.uuid4())
     with lock:
         queue.append(job_id)
-        position = len(queue)
-    return job_id, position
+        return job_id, len(queue)
 
 
 def get_position(job_id):
@@ -23,17 +22,12 @@ def get_position(job_id):
         return -1
 
 
-def start_job():
+def pop_next_job():
     global current_job
     with lock:
-
-        if current_job is not None:
-            return current_job
-
-        if queue:
+        if current_job is None and queue:
             current_job = queue.pop(0)
             return current_job
-
         return None
 
 
