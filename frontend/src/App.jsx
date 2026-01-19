@@ -7,10 +7,6 @@ export default function App() {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ QUEUE STATE (REQUIRED)
-  const [status, setStatus] = useState("idle"); // idle | queued | processing | done
-  const [queuePosition, setQueuePosition] = useState(null);
-
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-gray-200 flex items-center justify-center px-4">
       <div className="w-full max-w-4xl rounded-2xl border border-gray-700/40 bg-black/70 backdrop-blur-md shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
@@ -43,16 +39,12 @@ export default function App() {
           <PosterForm
             setImageUrl={setImageUrl}
             setLoading={setLoading}
-            setQueuePosition={setQueuePosition}
-            status={status}
-            setStatus={setStatus}
+            loading={loading}
           />
 
           <PosterPreview
             imageUrl={imageUrl}
             loading={loading}
-            queuePosition={queuePosition}
-            status={status}
           />
         </div>
 

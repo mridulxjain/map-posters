@@ -5,7 +5,6 @@ from fastapi.staticfiles import StaticFiles
 
 from poster_generator import generate_map_poster
 from cleanup import cleanup_old_posters
-from queue_manager import add_job, get_position, pop_next_job, finish_job
 
 app = FastAPI()
 
@@ -28,34 +27,36 @@ os.makedirs(POSTERS_DIR, exist_ok=True)
 app.mount("/posters", StaticFiles(directory=POSTERS_DIR), name="posters")
 
 
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/generate")
-def generate(city: str, country: str, theme: str = "feature_based", dist: int = 6000):
-    job_id, position = add_job()
-    return {"job_id": job_id, "queue_position": position}
+def generate(
+    city: str,
+    country: str,
+    theme: str = "feature_based",
+    dist: int = 5000,
+):
+    # HARD safety limits for Render
+    dist = min(dist, 5000)
 
+    print("STARTING GENERATION")
 
-@app.get("/queue-status")
-def queue_status(job_id: str):
-    position = get_position(job_id)
+    image_path = generate_map_poster(
+        city=city,
+        country=country,
+        theme_name=theme,
+        dist=dist,
+    )
 
-    if position == 1:
-        next_job = pop_next_job()
-        if next_job == job_id:
-            try:
-                image_path = generate_map_poster(
-                    city="", country="", theme="feature_based", dist=5000
-                )
-                filename = os.path.basename(image_path)
-                cleanup_old_posters(POSTERS_DIR)
+    filename = os.path.basename(image_path)
 
-                finish_job()
-                return {
-                    "position": 0,
-                    "status": "done",
-                    "image_url": f"{BASE_URL}/posters/{filename}",
-                }
-            except Exception:
-                finish_job()
-                return {"position": -1, "status": "error"}
+    cleanup_old_posters(POSTERS_DIR)
 
-    return {"position": position}
+    print("GENERATION DONE")
+
+    return {
+        "image_url": f"{BASE_URL}/posters/{filename}"
+    }

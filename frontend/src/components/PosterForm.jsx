@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const THEMES = [
   { value: "feature_based", label: "Feature Based", desc: "Balanced streets with clean hierarchy" },
@@ -15,101 +15,39 @@ const THEMES = [
 const DISTANCES = [
   { value: 4000, label: "4 km (Compact)" },
   { value: 5000, label: "5 km (Balanced)" },
-  { value: 6000, label: "6 km (Wide)" },
 ];
 
 const API = "https://map-posters.onrender.com";
 
-export default function PosterForm({
-  setImageUrl,
-  setLoading,
-  setQueuePosition,
-  status,
-  setStatus,
-}) {
+export default function PosterForm({ setImageUrl, setLoading, loading }) {
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [theme, setTheme] = useState("feature_based");
   const [distance, setDistance] = useState(5000);
-  const [jobId, setJobId] = useState(null);
 
   const activeTheme = THEMES.find(t => t.value === theme);
 
-  // ---------------- START GENERATION ----------------
   async function handleGenerate() {
-    if (!city || !country || status !== "idle") return;
+    if (!city || !country || loading) return;
 
-    setStatus("queued");
     setLoading(true);
     setImageUrl(null);
-    setQueuePosition(null);
 
-    const res = await fetch(
-      `${API}/generate?city=${encodeURIComponent(city)}&country=${encodeURIComponent(
-        country
-      )}&theme=${theme}&dist=${distance}`
-    );
-
-    const data = await res.json();
-    setJobId(data.job_id);
-    setQueuePosition(data.queue_position);
-  }
-
-  // ---------------- POLL QUEUE ----------------
-  useEffect(() => {
-    if (!jobId || status !== "queued") return;
-
-    const interval = setInterval(async () => {
-      const res = await fetch(`${API}/queue-status?job_id=${jobId}`);
-      const data = await res.json();
-
-      setQueuePosition(data.position);
-
-      if (data.position === 0) {
-        setStatus("processing");
-        clearInterval(interval);
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [jobId, status]);
-
-  // ---------------- PROCESS JOB ----------------
-  useEffect(() => {
-    if (status !== "processing" || !jobId) return;
-
-    async function processJob() {
+    try {
       const res = await fetch(
-        `${API}/process?job_id=${jobId}&city=${encodeURIComponent(
-          city
-        )}&country=${encodeURIComponent(
+        `${API}/generate?city=${encodeURIComponent(city)}&country=${encodeURIComponent(
           country
         )}&theme=${theme}&dist=${distance}`
       );
 
       const data = await res.json();
-
-      if (data.status === "done") {
-        setImageUrl(data.image_url);
-        setStatus("done");
-        setLoading(false);
-      }
+      setImageUrl(data.image_url);
+    } catch (err) {
+      alert("Failed to generate poster. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    processJob();
-  }, [status, jobId]);
-
-  // ---------------- BUTTON TEXT ----------------
-  const buttonText =
-    status === "idle"
-      ? "Generate Poster"
-      : status === "queued"
-      ? "In Queue..."
-      : status === "processing"
-      ? "Generating..."
-      : "Generate Again";
-
-  const disabled = status !== "idle";
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -120,7 +58,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={city}
             onChange={e => setCity(e.target.value)}
-            disabled={disabled}
+            disabled={loading}
           />
         </div>
 
@@ -130,7 +68,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={country}
             onChange={e => setCountry(e.target.value)}
-            disabled={disabled}
+            disabled={loading}
           />
         </div>
 
@@ -140,7 +78,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={distance}
             onChange={e => setDistance(Number(e.target.value))}
-            disabled={disabled}
+            disabled={loading}
           >
             {DISTANCES.map(d => (
               <option key={d.value} value={d.value}>
@@ -156,7 +94,7 @@ export default function PosterForm({
             className="w-full mt-1 bg-black/80 border border-gray-700 rounded-md px-3 py-2 text-sm"
             value={theme}
             onChange={e => setTheme(e.target.value)}
-            disabled={disabled}
+            disabled={loading}
           >
             {THEMES.map(t => (
               <option key={t.value} value={t.value}>
@@ -176,15 +114,15 @@ export default function PosterForm({
       <div className="mt-auto pt-5">
         <button
           onClick={handleGenerate}
-          disabled={disabled}
+          disabled={loading}
           className={`w-full py-2.5 rounded-md text-sm font-medium transition
             ${
-              disabled
+              loading
                 ? "bg-gray-800 text-gray-500 cursor-not-allowed"
                 : "bg-indigo-500/10 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20"
             }`}
         >
-          {buttonText}
+          {loading ? "Generating…" : "Generate Poster"}
         </button>
       </div>
     </div>
