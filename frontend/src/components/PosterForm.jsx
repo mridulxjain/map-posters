@@ -10,6 +10,9 @@ const THEMES = [
   { value: "contrast_zones", label: "Contrast Zones", desc: "Strong urban density contrast" },
   { value: "gradient_roads", label: "Gradient Roads", desc: "Smooth radial gradients" },
   { value: "neon_cyberpunk", label: "Neon Cyberpunk", desc: "Electric pink and cyan night city" },
+  { value: "japanese_ink", label: "Japanese Ink", desc: "Traditional sumi-e ink wash style" },
+  { value: "forest", label: "Forest", desc: "Lush greens and natural tones"},
+  { value: "monochrome_blue", label: "Monochrome Blue", desc: "Shades of blue for a calming effect" },
 ];
 
 const DISTANCES = [
