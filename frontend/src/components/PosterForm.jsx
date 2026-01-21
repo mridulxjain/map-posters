@@ -13,6 +13,9 @@ const THEMES = [
   { value: "japanese_ink", label: "Japanese Ink", desc: "Traditional sumi-e ink wash style" },
   { value: "forest", label: "Forest", desc: "Lush greens and natural tones"},
   { value: "monochrome_blue", label: "Monochrome Blue", desc: "Shades of blue for a calming effect" },
+  { value: "copper_patina", label: "Copper Patina", desc: "Warm copper tones with a vintage feel" },
+  { value: "ocean", label: "Ocean", desc: "Cool blues and aquamarine shades" },
+  { value: "pastel_dream", label: "Pastel Dream", desc: "Soft pastel colors for a dreamy look" },
 ];
 
 const DISTANCES = [
