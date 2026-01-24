@@ -61,4 +61,4 @@ All map data © OpenStreetMap contributors.
 
 ## Author
 
-Made with lvoveby **Mridul Jain**  
+Made with love by **Mridul Jain**  
